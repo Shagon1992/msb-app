@@ -152,8 +152,6 @@
   const urlParams = new URLSearchParams(window.location.search);
   const songId = urlParams.get('id');
   const NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  
-  // Perbaikan Regex: Sekarang mengizinkan angka, kurung, dan garis miring
   const CHORD_REGEX = /^\(?([A-G])([#b]?)(m|maj|min|dim|aug|sus|add|M|\+|-)?[0-9]*(?:\/([A-G])([#b]?))?\)?$/;
 
   let originalContent = '', currentTranspose = 0;
@@ -185,19 +183,15 @@
     let lines = cleanText.split('\n');
     return lines.map(line => {
       if (!line.trim()) return `<div class="line-row">&nbsp;</div>`; 
-      
       const tokens = line.split(/(\s+)/);
       const parsedLine = tokens.map(tok => {
-        if (/^\s+$/.test(tok)) return tok; // Biarkan spasi
-        
+        if (/^\s+$/.test(tok)) return tok; 
         let cleanTok = tok.trim();
         let isWrapped = false;
         if (cleanTok.startsWith('(') && cleanTok.endsWith(')')) {
           cleanTok = cleanTok.slice(1, -1);
           isWrapped = true;
         }
-
-        // Jika ada tanda hubung (misal C-G-Am), kita pecah dan proses satu per satu
         if (cleanTok.includes('-')) {
           const parts = cleanTok.split('-');
           const processedParts = parts.map(part => {
@@ -208,17 +202,13 @@
           });
           return (isWrapped ? '<span class="lyric">(</span>' : '') + processedParts.join('-') + (isWrapped ? '<span class="lyric">)</span>' : '');
         }
-
-        // Jika chord biasa
         if (cleanTok && CHORD_REGEX.test(cleanTok)) {
            return (isWrapped ? '<span class="lyric">(</span>' : '') + 
                   `<span class="chord">${escapeHtml(transposeChord(cleanTok, currentTranspose))}</span>` + 
                   (isWrapped ? '<span class="lyric">)</span>' : '');
         }
-        
         return `<span class="lyric">${escapeHtml(tok)}</span>`;
       }).join('');
-      
       return `<div class="line-row">${parsedLine}</div>`;
     }).join('');
   }

@@ -130,7 +130,7 @@
   const CHORD_REGEX = /^\(?([A-G])([#b]?)(m|maj|min|dim|aug|sus|add|M|\+|-)?[0-9]*(?:\/([A-G])([#b]?))?\)?$/;
 
   function isChord(token) {
-    const t = token.trim().replace(/[()]/g, ''); // Hapus kurung dulu untuk cek
+    const t = token.trim().replace(/[()]/g, '');
     return t && /^[A-G]/.test(t) && CHORD_REGEX.test(token.trim());
   }
 
@@ -142,14 +142,12 @@
       const tokens = line.split(/(\s+)/);
       const parsedLine = tokens.map(tok => {
         if (/^\s+$/.test(tok)) return tok; 
-        
         let cleanTok = tok.trim();
         let isWrapped = false;
         if (cleanTok.startsWith('(') && cleanTok.endsWith(')')) {
           cleanTok = cleanTok.slice(1, -1);
           isWrapped = true;
         }
-
         if (cleanTok.includes('-')) {
           const parts = cleanTok.split('-');
           const processedParts = parts.map(part => {
@@ -160,7 +158,6 @@
           });
           return (isWrapped ? '<span class="lyric">(</span>' : '') + processedParts.join('-') + (isWrapped ? '<span class="lyric">)</span>' : '');
         }
-
         if (cleanTok && CHORD_REGEX.test(cleanTok)) {
            return (isWrapped ? '<span class="lyric">(</span>' : '') + 
                   `<span class="chord">${escapeHtml(cleanTok)}</span>` + 
@@ -203,7 +200,6 @@
   document.getElementById('cancel-btn').addEventListener('click', () => { window.location.href = 'detail.html?id=' + songId; });
 
   loadSong();
-  if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js')); }
 </script>
 </body>
 </html>
