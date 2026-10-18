@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MSB - Musikan Sor Binjai</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f0f13">
+<style>
+  :root {
+    --bg: #0f0f13; --bg-card: #1c1c24; --bg-hover: #2a2a35;
+    --bg-input: #1c1c24; --text: #f0f0f5; --text-muted: #8b8b9a;
+    --accent: #4fc3f7; --accent-glow: rgba(79, 195, 247, 0.2); --border: #2a2a35;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5; padding: 24px 16px; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+  }
+  .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 16px; }
+
+  .profile-header { text-align: center; margin-bottom: 16px; }
+  .profile-icon {
+    width: 100px; height: 100px; background: #fff; border: 3px solid var(--accent);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px; box-shadow: 0 0 20px var(--accent-glow); overflow: hidden;
+  }
+  .profile-icon img { width: 100%; height: 100%; object-fit: cover; }
+  .profile-header h1 { font-size: 24px; color: var(--text); letter-spacing: 1px; margin-bottom: 4px; }
+  .profile-header p { font-size: 14px; color: var(--text-muted); }
+
+  .search-container { position: relative; width: 100%; margin-bottom: 8px; }
+  .search-container input {
+    width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 16px 16px 48px; color: var(--text);
+    font-size: 16px; outline: none; transition: border-color 0.2s;
+  }
+  .search-container input:focus { border-color: var(--accent); }
+  .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px; }
+
+  .info-text { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 8px; }
+
+  .song-list { display: flex; flex-direction: column; gap: 12px; }
+  .song-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 20px; text-decoration: none; color: inherit;
+    display: flex; align-items: center; justify-content: space-between; transition: all 0.2s ease;
+  }
+  .song-card:hover, .song-card:active { background: var(--bg-hover); border-color: var(--accent); transform: translateY(-2px); }
+  .song-info h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .song-info small { font-size: 12px; color: var(--text-muted); }
+  .song-arrow { color: var(--accent); font-size: 20px; opacity: 0.5; transition: opacity 0.2s, transform 0.2s; }
+  .song-card:hover .song-arrow { opacity: 1; transform: translateX(4px); }
+
+  .add-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: transparent; border: 2px dashed var(--border); color: var(--text-muted);
+    border-radius: 12px; padding: 18px; text-decoration: none; font-weight: 600; font-size: 15px; transition: all 0.2s; margin-top: 8px;
+  }
+  .add-btn:hover, .add-btn:active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+  .empty { text-align: center; color: var(--text-muted); padding: 40px 20px; background: var(--bg-card); border-radius: 12px; border: 1px dashed var(--border); }
+
+  /* ===== CSS UNTUK POP-UP INSTALL ===== */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  
+  .modal-box {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; width: 100%; max-width: 350px;
+    text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  
+  .modal-box img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--accent); margin-bottom: 16px; }
+  .modal-box h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
+  .modal-box p { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4; }
+  
+  .modal-actions { display: flex; flex-direction: column; gap: 10px; }
+  .modal-actions button {
+    width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+  .btn-install { background: var(--accent); color: #000; }
+  .btn-later { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+
+  /* Panduan iOS */
+  .ios-guide { display: none; text-align: left; font-size: 13px; color: var(--text); background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--border); }
+  .ios-guide b { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header class="profile-header">
+    <div class="profile-icon">
+      <img src="https://i.ibb.co.com/BKCZmKM5/MSB.jpg" alt="MSB Logo">
+    </div>
+    <h1>MSB</h1>
+    <p>Musikan Sor Binjai</p>
+  </header>
+
+  <div class="search-container">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search-input" placeholder="Cari judul lagu atau lirik..." autocomplete="off">
+  </div>
+
+  <div class="info-text" id="info-text">Memuat daftar lagu...</div>
+  <div class="song-list" id="song-list"></div>
+
+  <a href="import.html" class="add-btn">
+    <span style="font-size: 20px;">+</span> Tambah Lagu Baru
+  </a>
+</div>
+
+<!-- MODAL POP-UP INSTALL -->
+<div class="modal-overlay" id="install-modal">
+  <div class="modal-box">
+    <img src="https://i.ibb.co.com/BKCZmKM5/MSB.jpg" alt="Logo">
+    <h3>Install Aplikasi MSB</h3>
+    
+    <!-- Teks untuk Android/Desktop -->
+    <p id="install-text-android">Install aplikasi ini di layar utama HP kamu untuk akses lebih cepat dan tampilan seperti aplikasi native.</p>
+    
+    <!-- Panduan khusus iOS -->
+    <div class="ios-guide" id="install-text-ios">
+      1. Ketuk tombol <b>Bagikan (Share)</b> di Safari.<br>
+      2. Gulir ke bawah dan pilih <b>"Tambahkan ke Layar Utama" (Add to Home Screen)</b>.<br>
+      3. Ketuk <b>Tambah</b> di pojok kanan atas.
+    </div>
+
+    <div class="modal-actions" id="actions-android">
+      <button class="btn-install" id="btn-do-install">Install Sekarang</button>
+      <button class="btn-later" id="btn-close-modal">Nanti Saja</button>
+    </div>
+
+    <div class="modal-actions" id="actions-ios" style="display:none;">
+      <button class="btn-later" id="btn-close-ios">Mengerti</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://ufuqkmvuqqrazuzzjbht.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdXFrbXZ1cXFyYXp1enpqYmh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMTMxODIsImV4cCI6MjEwNzg4OTE4Mn0.V0fQ-3pmH-xrZzd9DXSYYJCofnFZxLMs519cikoF5fU';
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const listEl = document.getElementById('song-list');
+  const infoText = document.getElementById('info-text');
+  const searchInput = document.getElementById('search-input');
+  let allSongs = [];
+
+  async function loadSongs() {
+    const { data, error } = await client.from('songs').select('id, judul_lengkap, konten_chord, updated_at').order('updated_at', { ascending: false });
+    if (error) { infoText.textContent = 'Gagal memuat data.'; return; }
+    allSongs = data || [];
+    renderSongs(allSongs);
+  }
+
+  function renderSongs(songs) {
+    if (songs.length === 0) {
+      listEl.innerHTML = '<div class="empty">Tidak ada lagu yang ditemukan.</div>';
+      infoText.textContent = '0 lagu ditemukan'; return;
+    }
+    infoText.textContent = `Menampilkan ${songs.length} lagu`;
+    listEl.innerHTML = songs.map(song => `
+      <a href="detail.html?id=${song.id}" class="song-card">
+        <div class="song-info">
+          <h3>${escapeHtml(song.judul_lengkap)}</h3>
+          <small>Diperbarui: ${new Date(song.updated_at).toLocaleDateString('id-ID')}</small>
+        </div>
+        <span class="song-arrow">➔</span>
+      </a>
+    `).join('');
+  }
+
+  searchInput.addEventListener('input', (e) => {
+    const keyword = e.target.value.toLowerCase().trim();
+    if (!keyword) { renderSongs(allSongs); return; }
+    const filtered = allSongs.filter(song => 
+      song.judul_lengkap.toLowerCase().includes(keyword) || 
+      song.konten_chord.toLowerCase().includes(keyword)
+    );
+    renderSongs(filtered);
+  });
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ===== LOGIKA INSTALL PWA (POP-UP) =====
+  const modal = document.getElementById('install-modal');
+  const btnDoInstall = document.getElementById('btn-do-install');
+  const btnClose = document.getElementById('btn-close-modal');
+  const btnCloseIos = document.getElementById('btn-close-ios');
+  let deferredPrompt;
+
+  // Cek apakah di iOS (iPhone/iPad)
+  const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+  // Cek apakah aplikasi sudah berjalan di mode standalone (sudah di-install)
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  // Tangkap event install dari browser (Android/Desktop)
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Jika belum di-install dan user belum klik "Nanti", tampilkan modal
+    if (!isStandalone && localStorage.getItem('msb_install_dismissed') !== 'true') {
+      setTimeout(() => { modal.classList.add('show'); }, 1500); // Muncul setelah 1.5 detik
+    }
+  });
+
+  // Deteksi khusus iOS (karena iOS tidak support beforeinstallprompt)
+  if (isIos && !isStandalone && localStorage.getItem('msb_install_dismissed') !== 'true') {
+    setTimeout(() => {
+      document.getElementById('install-text-android').style.display = 'none';
+      document.getElementById('actions-android').style.display = 'none';
+      document.getElementById('install-text-ios').style.display = 'block';
+      document.getElementById('actions-ios').style.display = 'flex';
+      modal.classList.add('show');
+    }, 1500);
+  }
+
+  // Tombol Install (Android/Desktop)
+  btnDoInstall.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    modal.classList.remove('show');
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  });
+
+  // Tombol Nanti Saja (Simpan di localStorage agar tidak muncul terus)
+  btnClose.addEventListener('click', () => {
+    modal.classList.remove('show');
+    localStorage.setItem('msb_install_dismissed', 'true');
+  });
+
+  // Tombol Mengerti (iOS)
+  btnCloseIos.addEventListener('click', () => {
+    modal.classList.remove('show');
+    localStorage.setItem('msb_install_dismissed', 'true');
+  });
+
+  // Jalankan fungsi utama
+  loadSongs();
+  if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js')); }
+</script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MSB - Edit Lagu</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f0f13">
+<style>
+  :root {
+    --bg: #0f0f13; --bg-card: #16161e; --bg-input: #232330;
+    --text: #e2e2e8; --accent: #4fc3f7; --chord: #4fc3f7; --lyric: #e2e2e8; 
+    --border: #2a2a35; --danger: #ff6b6b; --success: #66bb6a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 0 16px 100px; line-height: 1.5; max-width: 800px; margin: 0 auto;
+  }
+  
+  .header-wrapper {
+    position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px);
+    background: rgba(15, 15, 19, 0.95); border-bottom: 1px solid var(--border);
+    margin: 0 -16px 24px;
+  }
+  .header-brand {
+    display: flex; align-items: center; justify-content: flex-start; gap: 12px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .header-brand img { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--accent); object-fit: cover; }
+  .header-brand h2 { font-size: 20px; color: var(--accent); font-weight: 700; letter-spacing: 0.5px; }
+
+  header { padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+  .btn-back { background: var(--bg-input); border: 1px solid var(--border); color: var(--text); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; flex-shrink: 0; }
+  header h1 { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+  input[type="text"] {
+    width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; color: var(--text); font-size: 16px; margin-bottom: 16px; outline: none;
+  }
+  input:focus { border-color: var(--accent); }
+  
+  textarea {
+    width: 100%; min-height: 40vh; background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; color: var(--text);
+    font-family: "SFMono-Regular", Consolas, monospace; font-size: 15px; line-height: 1.6;
+    resize: vertical; margin-bottom: 16px; white-space: pre; overflow-x: auto; outline: none;
+  }
+  textarea:focus { border-color: var(--accent); }
+
+  .preview-label { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+  .preview {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 15px;
+    white-space: pre-wrap; overflow-x: auto; min-height: 150px; margin-bottom: 16px;
+    display: flex; flex-direction: column; gap: 0px;
+  }
+  .preview .line-row { line-height: 1.1; min-height: 1.2em; }
+  .preview .chord { color: var(--chord); font-weight: 700; }
+  .preview .lyric { color: var(--lyric); }
+
+  .status { font-size: 14px; padding: 12px; border-radius: 10px; margin-bottom: 16px; text-align: center; }
+  .status.error { background: rgba(255,107,107,0.1); color: var(--danger); border: 1px solid var(--danger); }
+  .status.success { background: rgba(102,187,106,0.1); color: var(--success); border: 1px solid var(--success); }
+  .status.info { background: rgba(79,195,247,0.1); color: var(--accent); border: 1px solid var(--accent); }
+  
+  .actions {
+    position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15, 15, 19, 0.95);
+    backdrop-filter: blur(10px); border-top: 1px solid var(--border); 
+    padding: 12px 16px; display: flex; justify-content: center; gap: 12px; z-index: 10;
+  }
+  .actions button {
+    padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none;
+  }
+  .btn-save { background: var(--accent); color: #000; }
+  .btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="header-wrapper">
+  <div class="header-brand">
+    <img src="https://i.ibb.co.com/BKCZmKM5/MSB.jpg" alt="Logo">
+    <h2>MSB (Musikan Sor Binjai)</h2>
+  </div>
+  <header>
+    <a href="index.html" class="btn-back">←</a>
+    <h1>Edit Lagu</h1>
+  </header>
+</div>
+
+<div id="status" class="status info hidden"></div>
+<div id="loading" style="text-align:center; padding: 40px; color: var(--text-muted);">Memuat...</div>
+
+<div id="form-container" class="hidden">
+  <label for="judul-input">Judul (Artis - Lagu)</label>
+  <input type="text" id="judul-input" placeholder="Artis - Judul Lagu" autocomplete="off">
+
+  <label for="konten-input">Lirik & Chord</label>
+  <textarea id="konten-input" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
+
+  <div class="preview-label">Preview Warna</div>
+  <div id="preview" class="preview"></div>
+</div>
+
+<div class="actions hidden" id="actions">
+  <button id="cancel-btn" class="btn-cancel">Batal</button>
+  <button id="save-btn" class="btn-save">Simpan</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://ufuqkmvuqqrazuzzjbht.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdXFrbXZ1cXFyYXp1enpqYmh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMTMxODIsImV4cCI6MjEwNzg4OTE4Mn0.V0fQ-3pmH-xrZzd9DXSYYJCofnFZxLMs519cikoF5fU';
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const songId = urlParams.get('id');
+  const statusEl = document.getElementById('status');
+  const loadingEl = document.getElementById('loading');
+  const formContainer = document.getElementById('form-container');
+  const actionsEl = document.getElementById('actions');
+  const judulInput = document.getElementById('judul-input');
+  const kontenInput = document.getElementById('konten-input');
+  const previewEl = document.getElementById('preview');
+
+  const CHORD_REGEX = /^\(?([A-G])([#b]?)(m|maj|min|dim|aug|sus|add|M|\+|-)?[0-9]*(?:\/([A-G])([#b]?))?\)?$/;
+
+  function isChord(token) {
+    const t = token.trim().replace(/[()]/g, ''); // Hapus kurung dulu untuk cek
+    return t && /^[A-G]/.test(t) && CHORD_REGEX.test(token.trim());
+  }
+
+  function renderPreview(text) {
+    let cleanText = text.split('\n').map(line => line.trimEnd()).join('\n');
+    let lines = cleanText.split('\n');
+    return lines.map(line => {
+      if (!line.trim()) return `<div class="line-row">&nbsp;</div>`; 
+      const tokens = line.split(/(\s+)/);
+      const parsedLine = tokens.map(tok => {
+        if (/^\s+$/.test(tok)) return tok; 
+        
+        let cleanTok = tok.trim();
+        let isWrapped = false;
+        if (cleanTok.startsWith('(') && cleanTok.endsWith(')')) {
+          cleanTok = cleanTok.slice(1, -1);
+          isWrapped = true;
+        }
+
+        if (cleanTok.includes('-')) {
+          const parts = cleanTok.split('-');
+          const processedParts = parts.map(part => {
+            if (CHORD_REGEX.test(part)) {
+              return `<span class="chord">${escapeHtml(part)}</span>`;
+            }
+            return `<span class="lyric">${escapeHtml(part)}</span>`;
+          });
+          return (isWrapped ? '<span class="lyric">(</span>' : '') + processedParts.join('-') + (isWrapped ? '<span class="lyric">)</span>' : '');
+        }
+
+        if (cleanTok && CHORD_REGEX.test(cleanTok)) {
+           return (isWrapped ? '<span class="lyric">(</span>' : '') + 
+                  `<span class="chord">${escapeHtml(cleanTok)}</span>` + 
+                  (isWrapped ? '<span class="lyric">)</span>' : '');
+        }
+        return `<span class="lyric">${escapeHtml(tok)}</span>`;
+      }).join('');
+      return `<div class="line-row">${parsedLine}</div>`;
+    }).join('');
+  }
+
+  function escapeHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function showStatus(msg, type = 'info') { statusEl.textContent = msg; statusEl.className = 'status ' + type; statusEl.classList.remove('hidden'); }
+
+  async function loadSong() {
+    if (!songId) { loadingEl.textContent = 'ID tidak valid.'; return; }
+    const { data, error } = await client.from('songs').select('*').eq('id', songId).single();
+    if (error || !data) { loadingEl.textContent = 'Gagal memuat.'; return; }
+    judulInput.value = data.judul_lengkap; kontenInput.value = data.konten_chord;
+    previewEl.innerHTML = renderPreview(data.konten_chord);
+    loadingEl.classList.add('hidden'); formContainer.classList.remove('hidden'); actionsEl.classList.remove('hidden');
+  }
+
+  let debounceTimer;
+  kontenInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => { previewEl.innerHTML = renderPreview(kontenInput.value); }, 250);
+  });
+
+  document.getElementById('save-btn').addEventListener('click', async () => {
+    const judul = judulInput.value.trim(); const konten = kontenInput.value.trim();
+    if (!judul || !konten) { showStatus('Judul dan konten tidak boleh kosong.', 'error'); return; }
+    const btn = document.getElementById('save-btn'); btn.disabled = true; showStatus('Menyimpan...');
+    const { error } = await client.from('songs').update({ judul_lengkap: judul, konten_chord: konten, updated_at: new Date().toISOString() }).eq('id', songId);
+    if (error) { showStatus('Gagal: ' + error.message, 'error'); btn.disabled = false; return; }
+    showStatus('Berhasil diperbarui!', 'success');
+    setTimeout(() => window.location.href = 'detail.html?id=' + songId, 1000);
+  });
+
+  document.getElementById('cancel-btn').addEventListener('click', () => { window.location.href = 'detail.html?id=' + songId; });
+
+  loadSong();
+  if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js')); }
+</script>
+</body>
+</html>
