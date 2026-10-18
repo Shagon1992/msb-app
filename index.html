@@ -122,10 +122,8 @@
     <img src="https://i.ibb.co.com/BKCZmKM5/MSB.jpg" alt="Logo">
     <h3>Install Aplikasi MSB</h3>
     
-    <!-- Teks untuk Android/Desktop -->
     <p id="install-text-android">Install aplikasi ini di layar utama HP kamu untuk akses lebih cepat dan tampilan seperti aplikasi native.</p>
     
-    <!-- Panduan khusus iOS -->
     <div class="ios-guide" id="install-text-ios">
       1. Ketuk tombol <b>Bagikan (Share)</b> di Safari.<br>
       2. Gulir ke bawah dan pilih <b>"Tambahkan ke Layar Utama" (Add to Home Screen)</b>.<br>
@@ -145,6 +143,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  // ===== 1. LOGIKA DATABASE SUPABASE =====
   const SUPABASE_URL = 'https://ufuqkmvuqqrazuzzjbht.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdXFrbXZ1cXFyYXp1enpqYmh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMTMxODIsImV4cCI6MjEwNzg4OTE4Mn0.V0fQ-3pmH-xrZzd9DXSYYJCofnFZxLMs519cikoF5fU';
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -192,30 +191,25 @@
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // ===== LOGIKA INSTALL PWA (POP-UP) =====
+  // ===== 2. LOGIKA INSTALL PWA (POP-UP) =====
   const modal = document.getElementById('install-modal');
   const btnDoInstall = document.getElementById('btn-do-install');
   const btnClose = document.getElementById('btn-close-modal');
   const btnCloseIos = document.getElementById('btn-close-ios');
   let deferredPrompt;
 
-  // Cek apakah di iOS (iPhone/iPad)
   const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-  // Cek apakah aplikasi sudah berjalan di mode standalone (sudah di-install)
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-  // Tangkap event install dari browser (Android/Desktop)
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
 
-    // Jika belum di-install dan user belum klik "Nanti", tampilkan modal
     if (!isStandalone && localStorage.getItem('msb_install_dismissed') !== 'true') {
-      setTimeout(() => { modal.classList.add('show'); }, 1500); // Muncul setelah 1.5 detik
+      setTimeout(() => { modal.classList.add('show'); }, 1500);
     }
   });
 
-  // Deteksi khusus iOS (karena iOS tidak support beforeinstallprompt)
   if (isIos && !isStandalone && localStorage.getItem('msb_install_dismissed') !== 'true') {
     setTimeout(() => {
       document.getElementById('install-text-android').style.display = 'none';
@@ -226,7 +220,6 @@
     }, 1500);
   }
 
-  // Tombol Install (Android/Desktop)
   btnDoInstall.addEventListener('click', async () => {
     if (!deferredPrompt) return;
     modal.classList.remove('show');
@@ -235,21 +228,31 @@
     deferredPrompt = null;
   });
 
-  // Tombol Nanti Saja (Simpan di localStorage agar tidak muncul terus)
   btnClose.addEventListener('click', () => {
     modal.classList.remove('show');
     localStorage.setItem('msb_install_dismissed', 'true');
   });
 
-  // Tombol Mengerti (iOS)
   btnCloseIos.addEventListener('click', () => {
     modal.classList.remove('show');
     localStorage.setItem('msb_install_dismissed', 'true');
   });
 
-  // Jalankan fungsi utama
+  // ===== 3. JALANKAN FUNGSI UTAMA =====
   loadSongs();
-  if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js')); }
+
+  // ===== 4. DAFTARKAN SERVICE WORKER (PWA) =====
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .then(registration => {
+          console.log('Service Worker berhasil didaftarkan dengan scope:', registration.scope);
+        })
+        .catch(error => {
+          console.error('Service Worker gagal didaftarkan:', error);
+        });
+    });
+  }
 </script>
 </body>
 </html>

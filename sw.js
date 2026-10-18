@@ -1,12 +1,17 @@
-const CACHE_NAME = 'msb-cache-v3';
-const urlsToCache = ['index.html', 'detail.html', 'import.html', 'edit.html', 'manifest.json'];
+const CACHE_NAME = 'msb-pwa-v1';
 
-self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
+// Proses Install
+self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Paksa SW baru langsung aktif
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
-  );
+// Proses Aktif
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim()); // Ambil kendali halaman segera
+});
+
+// Fetch Handler (Syarat wajib Chrome Android)
+self.addEventListener('fetch', (event) => {
+  // Biarkan kosong atau berikan logika cache dasar.
+  // Yang penting handler ini ada.
 });

@@ -2,22 +2,30 @@
   "name": "MSB - Musikan Sor Binjai",
   "short_name": "MSB",
   "description": "Kumpulan chord lagu Musikan Sor Binjai",
-  "start_url": "index.html",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0f0f13",
   "theme_color": "#0f0f13",
   "icons": [
     {
-      "src": "https://i.ibb.co.com/BKCZmKM5/MSB.jpg",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://i.ibb.co.com/BKCZmKM5/MSB.jpg",
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
