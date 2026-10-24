@@ -20,7 +20,7 @@
   }
   .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 16px; }
 
-  .profile-header { text-align: center; margin-bottom: 16px; }
+  .profile-header { text-align: center; margin-bottom: 16px; display: flex; flex-direction: column; align-items: center; }
   .profile-icon {
     width: 100px; height: 100px; background: #fff; border: 3px solid var(--accent);
     border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -28,7 +28,17 @@
   }
   .profile-icon img { width: 100%; height: 100%; object-fit: cover; }
   .profile-header h1 { font-size: 24px; color: var(--text); letter-spacing: 1px; margin-bottom: 4px; }
-  .profile-header p { font-size: 14px; color: var(--text-muted); }
+  .profile-header p { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
+
+  /* Tombol Tambah Kecil */
+  .add-btn-small {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(79, 195, 247, 0.1); color: var(--accent);
+    border: 1px solid rgba(79, 195, 247, 0.3); padding: 6px 14px;
+    border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600;
+    transition: all 0.2s; gap: 6px;
+  }
+  .add-btn-small:hover, .add-btn-small:active { background: var(--accent); color: #000; }
 
   .search-container { position: relative; width: 100%; margin-bottom: 8px; }
   .search-container input {
@@ -48,19 +58,10 @@
     display: flex; align-items: center; justify-content: space-between; transition: all 0.2s ease;
   }
   .song-card:hover, .song-card:active { background: var(--bg-hover); border-color: var(--accent); transform: translateY(-2px); }
-  
-  /* Perubahan: Menghilangkan margin-bottom pada h3 karena tidak ada teks di bawahnya */
   .song-info h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 0; }
-  
   .song-arrow { color: var(--accent); font-size: 20px; opacity: 0.5; transition: opacity 0.2s, transform 0.2s; }
   .song-card:hover .song-arrow { opacity: 1; transform: translateX(4px); }
 
-  .add-btn {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    background: transparent; border: 2px dashed var(--border); color: var(--text-muted);
-    border-radius: 12px; padding: 18px; text-decoration: none; font-weight: 600; font-size: 15px; transition: all 0.2s; margin-top: 8px;
-  }
-  .add-btn:hover, .add-btn:active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
   .empty { text-align: center; color: var(--text-muted); padding: 40px 20px; background: var(--bg-card); border-radius: 12px; border: 1px dashed var(--border); }
 
   /* ===== CSS UNTUK POP-UP INSTALL ===== */
@@ -70,25 +71,19 @@
     display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px;
   }
   .modal-overlay.show { display: flex; }
-  
   .modal-box {
     background: var(--bg-card); border: 1px solid var(--border);
     border-radius: 16px; padding: 24px; width: 100%; max-width: 350px;
     text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: slideUp 0.3s ease;
   }
   @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-  
   .modal-box img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--accent); margin-bottom: 16px; }
   .modal-box h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
   .modal-box p { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4; }
-  
   .modal-actions { display: flex; flex-direction: column; gap: 10px; }
-  .modal-actions button {
-    width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer;
-  }
+  .modal-actions button { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; }
   .btn-install { background: var(--accent); color: #000; }
   .btn-later { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
-
   .ios-guide { display: none; text-align: left; font-size: 13px; color: var(--text); background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--border); }
   .ios-guide b { color: var(--accent); }
 </style>
@@ -102,6 +97,11 @@
     </div>
     <h1>MSB</h1>
     <p>Musikan Sor Binjai</p>
+    
+    <!-- Tombol Tambah Lagu Kecil -->
+    <a href="import.html" class="add-btn-small">
+      <span>+</span> Tambah Lagu
+    </a>
   </header>
 
   <div class="search-container">
@@ -111,10 +111,6 @@
 
   <div class="info-text" id="info-text">Memuat daftar lagu...</div>
   <div class="song-list" id="song-list"></div>
-
-  <a href="import.html" class="add-btn">
-    <span style="font-size: 20px;">+</span> Tambah Lagu Baru
-  </a>
 </div>
 
 <!-- MODAL POP-UP INSTALL -->
@@ -122,20 +118,16 @@
   <div class="modal-box">
     <img src="https://i.ibb.co.com/BKCZmKM5/MSB.jpg" alt="Logo">
     <h3>Install Aplikasi MSB</h3>
-    
     <p id="install-text-android">Install aplikasi ini di layar utama HP kamu untuk akses lebih cepat dan tampilan seperti aplikasi native.</p>
-    
     <div class="ios-guide" id="install-text-ios">
       1. Ketuk tombol <b>Bagikan (Share)</b> di Safari.<br>
       2. Gulir ke bawah dan pilih <b>"Tambahkan ke Layar Utama" (Add to Home Screen)</b>.<br>
       3. Ketuk <b>Tambah</b> di pojok kanan atas.
     </div>
-
     <div class="modal-actions" id="actions-android">
       <button class="btn-install" id="btn-do-install">Install Sekarang</button>
       <button class="btn-later" id="btn-close-modal">Nanti Saja</button>
     </div>
-
     <div class="modal-actions" id="actions-ios" style="display:none;">
       <button class="btn-later" id="btn-close-ios">Mengerti</button>
     </div>
@@ -144,7 +136,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // ===== 1. LOGIKA DATABASE SUPABASE =====
   const SUPABASE_URL = 'https://ufuqkmvuqqrazuzzjbht.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdXFrbXZ1cXFyYXp1enpqYmh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMTMxODIsImV4cCI6MjEwNzg4OTE4Mn0.V0fQ-3pmH-xrZzd9DXSYYJCofnFZxLMs519cikoF5fU';
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -167,8 +158,6 @@
       infoText.textContent = '0 lagu ditemukan'; return;
     }
     infoText.textContent = `Menampilkan ${songs.length} lagu`;
-    
-    // Perubahan: Hanya menampilkan judul lagu tanpa tanggal
     listEl.innerHTML = songs.map(song => `
       <a href="detail.html?id=${song.id}" class="song-card" onclick="window.location.href='detail.html?id=${song.id}'">
         <div class="song-info">
@@ -189,23 +178,19 @@
     renderSongs(filtered);
   });
 
-  function escapeHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+  function escapeHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  // ===== 2. LOGIKA INSTALL PWA (POP-UP) =====
+  // LOGIKA INSTALL PWA
   const modal = document.getElementById('install-modal');
   const btnDoInstall = document.getElementById('btn-do-install');
   const btnClose = document.getElementById('btn-close-modal');
   const btnCloseIos = document.getElementById('btn-close-ios');
   let deferredPrompt;
-
   const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
   window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
+    e.preventDefault(); deferredPrompt = e;
     if (!isStandalone && localStorage.getItem('msb_install_dismissed') !== 'true') {
       setTimeout(() => { modal.classList.add('show'); }, 1500);
     }
@@ -229,40 +214,24 @@
     deferredPrompt = null;
   });
 
-  btnClose.addEventListener('click', () => {
-    modal.classList.remove('show');
-    localStorage.setItem('msb_install_dismissed', 'true');
-  });
+  btnClose.addEventListener('click', () => { modal.classList.remove('show'); localStorage.setItem('msb_install_dismissed', 'true'); });
+  btnCloseIos.addEventListener('click', () => { modal.classList.remove('show'); localStorage.setItem('msb_install_dismissed', 'true'); });
 
-  btnCloseIos.addEventListener('click', () => {
-    modal.classList.remove('show');
-    localStorage.setItem('msb_install_dismissed', 'true');
-  });
-
-  // ===== 3. LOGIKA TOMBOL BACK (HISTORY API) =====
+  // LOGIKA TOMBOL BACK
   let backPressCount = 0;
   let backPressTimer;
-
   history.pushState(null, null, location.href);
-  
   window.onpopstate = function () {
     history.pushState(null, null, location.href);
     backPressCount++;
-    
     if (backPressCount === 2) {
-      clearTimeout(backPressTimer);
-      backPressCount = 0;
-      if (confirm('Apakah Anda yakin ingin keluar dari aplikasi MSB?')) {
-        window.location.href = 'about:blank'; 
-      }
+      clearTimeout(backPressTimer); backPressCount = 0;
+      if (confirm('Apakah Anda yakin ingin keluar dari aplikasi MSB?')) { window.location.href = 'about:blank'; }
     } else {
-      backPressTimer = setTimeout(() => {
-        backPressCount = 0;
-      }, 2000);
+      backPressTimer = setTimeout(() => { backPressCount = 0; }, 2000);
     }
   };
 
-  // ===== 4. JALANKAN FUNGSI UTAMA & SERVICE WORKER =====
   loadSongs();
 
   if ('serviceWorker' in navigator) {
