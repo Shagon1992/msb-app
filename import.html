@@ -138,11 +138,29 @@
   const kontenInput = document.getElementById('konten-input');
   const previewEl = document.getElementById('preview');
 
-  const CHORD_REGEX = /^\(?([A-G])([#b]?)(m|maj|min|dim|aug|sus|add|M|\+|-)?[0-9]*(?:\/([A-G])([#b]?))?\)?$/;
+  const CHORD_WITH_PUNCT_REGEX = /([\(\[]*)([A-G][#b]?(?:m|maj|min|m7|m9|dim|aug|sus|add|M|7|9|11|13|6|5|\+|-)*(?:\/[A-G][#b]?)?)(?=\W|$)([\)\]\.\,\-\:]*)/g;
+  const BASE_CHORD_REGEX = /^([A-G])([#b]?)(m|maj|min|m7|m9|dim|aug|sus|add|M|7|9|11|13|6|5|\+|-)?[0-9]*(?:\/[A-G][#b]?)?$/;
 
-  function isChord(token) {
-    const t = token.trim().replace(/[()]/g, '');
-    return t && /^[A-G]/.test(t) && CHORD_REGEX.test(token.trim());
+  function escapeHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function processToken(tok) {
+    if (/^\s+$/.test(tok)) return tok;
+    let match; let hasChord = false; let result = ''; let lastIndex = 0;
+    CHORD_WITH_PUNCT_REGEX.lastIndex = 0;
+    while ((match = CHORD_WITH_PUNCT_REGEX.exec(tok)) !== null) {
+      const [fullMatch, prefix, chordStr, suffix] = match;
+      if (BASE_CHORD_REGEX.test(chordStr)) {
+        hasChord = true;
+        result += escapeHtml(tok.substring(lastIndex, match.index));
+        result += `${escapeHtml(prefix)}<span class="chord">${escapeHtml(chordStr)}</span>${escapeHtml(suffix)}`;
+        lastIndex = CHORD_WITH_PUNCT_REGEX.lastIndex;
+      }
+    }
+    if (hasChord) {
+      result += escapeHtml(tok.substring(lastIndex));
+      return result;
+    }
+    return `<span class="lyric">${escapeHtml(tok)}</span>`;
   }
 
   function renderPreview(text) {
@@ -152,35 +170,13 @@
       if (!line.trim()) return `<div class="line-row">&nbsp;</div>`; 
       const tokens = line.split(/(\s+)/);
       const parsedLine = tokens.map(tok => {
-        if (/^\s+$/.test(tok)) return tok; 
-        let cleanTok = tok.trim();
-        let isWrapped = false;
-        if (cleanTok.startsWith('(') && cleanTok.endsWith(')')) {
-          cleanTok = cleanTok.slice(1, -1);
-          isWrapped = true;
-        }
-        if (cleanTok.includes('-')) {
-          const parts = cleanTok.split('-');
-          const processedParts = parts.map(part => {
-            if (CHORD_REGEX.test(part)) {
-              return `<span class="chord">${escapeHtml(part)}</span>`;
-            }
-            return `<span class="lyric">${escapeHtml(part)}</span>`;
-          });
-          return (isWrapped ? '<span class="lyric">(</span>' : '') + processedParts.join('-') + (isWrapped ? '<span class="lyric">)</span>' : '');
-        }
-        if (cleanTok && CHORD_REGEX.test(cleanTok)) {
-           return (isWrapped ? '<span class="lyric">(</span>' : '') + 
-                  `<span class="chord">${escapeHtml(cleanTok)}</span>` + 
-                  (isWrapped ? '<span class="lyric">)</span>' : '');
-        }
-        return `<span class="lyric">${escapeHtml(tok)}</span>`;
+        if (/^\s+$/.test(tok)) return tok;
+        return processToken(tok);
       }).join('');
       return `<div class="line-row">${parsedLine}</div>`;
     }).join('');
   }
 
-  function escapeHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function showStatus(msg, type = 'info') { statusEl.textContent = msg; statusEl.className = 'status ' + type; statusEl.classList.remove('hidden'); }
   function hideStatus() { statusEl.classList.add('hidden'); }
 

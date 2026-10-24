@@ -52,68 +52,29 @@
   .chord-container .chord { color: var(--chord); font-weight: 700; }
   .chord-container .lyric { color: var(--lyric); }
 
-  /* ===== PERBAIKAN MUTLAK: TOMBOL LACI BAWAH ===== */
   .actions-wrapper {
-    position: fixed; 
-    bottom: 0; 
-    left: 0; 
-    right: 0; 
-    z-index: 9999; /* Pastikan menimpa semuanya */
-    display: flex; 
-    flex-direction: column; 
-    align-items: center;
-    justify-content: flex-end; /* Paksa nempel ke bawah */
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999; 
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
   }
-  
-  /* Tombol Panah Toggle */
   .toggle-actions {
-    background: var(--bg-input); 
-    color: var(--text-muted); 
-    border: 1px solid var(--border); 
-    border-bottom: none;
-    border-radius: 12px 12px 0 0; 
-    padding: 8px 24px; 
-    font-size: 12px; 
-    font-weight: bold; 
-    cursor: pointer; 
-    outline: none;
+    background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border); border-bottom: none;
+    border-radius: 12px 12px 0 0; padding: 8px 24px; font-size: 12px; font-weight: bold; cursor: pointer; outline: none;
   }
   .toggle-actions:active { background: var(--accent); color: #000; }
 
-  /* Kotak Tombol Edit/Hapus (Laci) */
   .bottom-actions {
-    width: 100%; 
-    background: rgba(15, 15, 19, 0.95); 
-    backdrop-filter: blur(10px);
-    border-top: 1px solid var(--border); 
-    padding: 16px; 
-    display: flex; 
-    justify-content: center; 
-    gap: 12px;
-    /* Trik animasi laci */
-    transition: transform 0.3s ease, margin-bottom 0.3s ease;
-    margin-bottom: 0; /* Posisi normal */
+    width: 100%; background: rgba(15, 15, 19, 0.95); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border); padding: 16px; display: flex; justify-content: center; gap: 12px;
+    transition: transform 0.3s ease, margin-bottom 0.3s ease; margin-bottom: 0;
   }
-  
-  /* Saat disembunyikan, tarik laci ke bawah layar */
-  .bottom-actions.hidden {
-    transform: translateY(100%);
-    margin-bottom: -80px; /* Trik agar tombol panah tetap di dasar */
-  }
+  .bottom-actions.hidden { transform: translateY(100%); margin-bottom: -80px; }
 
   .bottom-actions a, .bottom-actions button {
-    padding: 12px 24px; 
-    border-radius: 8px; 
-    font-weight: 600; 
-    text-decoration: none; 
-    font-size: 14px; 
-    cursor: pointer; 
-    border: none;
+    padding: 12px 24px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px; cursor: pointer; border: none;
   }
   .btn-edit { background: var(--accent); color: #000; }
   .btn-delete { background: rgba(255,107,107,0.1); color: var(--danger); border: 1px solid var(--danger); padding: 12px 20px !important; font-size: 16px !important; }
 
-  /* SIDEBAR KANAN */
   .sidebar {
     position: fixed; right: 0; top: 50%; transform: translateY(-50%);
     width: 60px; background: rgba(35, 35, 48, 0.95); backdrop-filter: blur(10px);
@@ -165,10 +126,9 @@
   </div>
 </div>
 
-<!-- TOMBOL SEMBUNYI -->
 <div class="actions-wrapper">
-  <button class="toggle-actions" id="toggle-actions">▼ Sembunyikan</button>
-  <div class="bottom-actions" id="bottom-actions">
+  <button class="toggle-actions" id="toggle-actions">▲ Tampilkan</button>
+  <div class="bottom-actions hidden" id="bottom-actions">
     <a href="#" id="edit-link" class="btn-edit">Edit Lagu</a>
     <button id="delete-btn" class="btn-delete" title="Hapus">🗑️</button>
   </div>
@@ -207,7 +167,11 @@
   const urlParams = new URLSearchParams(window.location.search);
   const songId = urlParams.get('id');
   const NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  const CHORD_REGEX = /^\(?([A-G])([#b]?)(m|maj|min|dim|aug|sus|add|M|\+|-)?[0-9]*(?:\/([A-G])([#b]?))?\)?$/;
+  
+  // Aturan regex: Hanya mencocokkan chord yang diikuti oleh non-huruf (spasi, strip, titik, kurung)
+  const CHORD_WITH_PUNCT_REGEX = /([\(\[]*)([A-G][#b]?(?:m|maj|min|m7|m9|dim|aug|sus|add|M|7|9|11|13|6|5|\+|-)*(?:\/[A-G][#b]?)?)(?=\W|$)([\)\]\.\,\-\:]*)/g;
+  
+  const BASE_CHORD_REGEX = /^([A-G])([#b]?)(m|maj|min|m7|m9|dim|aug|sus|add|M|7|9|11|13|6|5|\+|-)?[0-9]*(?:\/[A-G][#b]?)?$/;
 
   let originalContent = '';
   let currentTranspose = 0;
@@ -234,6 +198,36 @@
     return shiftNote(root) + quality + (bass ? '/' + shiftNote(bass) : '');
   }
 
+  function processToken(tok) {
+    if (/^\s+$/.test(tok)) return tok;
+
+    let match;
+    let hasChord = false;
+    let result = '';
+    let lastIndex = 0;
+
+    CHORD_WITH_PUNCT_REGEX.lastIndex = 0;
+
+    while ((match = CHORD_WITH_PUNCT_REGEX.exec(tok)) !== null) {
+      const [fullMatch, prefix, chordStr, suffix] = match;
+      
+      if (BASE_CHORD_REGEX.test(chordStr)) {
+        hasChord = true;
+        result += escapeHtml(tok.substring(lastIndex, match.index));
+        const transposed = transposeChord(chordStr, currentTranspose);
+        result += `${escapeHtml(prefix)}<span class="chord">${escapeHtml(transposed)}</span>${escapeHtml(suffix)}`;
+        lastIndex = CHORD_WITH_PUNCT_REGEX.lastIndex;
+      }
+    }
+
+    if (hasChord) {
+      result += escapeHtml(tok.substring(lastIndex));
+      return result;
+    }
+
+    return `<span class="lyric">${escapeHtml(tok)}</span>`;
+  }
+
   function renderChords(text) {
     let cleanText = text.split('\n').map(line => line.trimEnd()).join('\n');
     let lines = cleanText.split('\n');
@@ -241,29 +235,8 @@
       if (!line.trim()) return `<div class="line-row">&nbsp;</div>`; 
       const tokens = line.split(/(\s+)/);
       const parsedLine = tokens.map(tok => {
-        if (/^\s+$/.test(tok)) return tok; 
-        let cleanTok = tok.trim();
-        let isWrapped = false;
-        if (cleanTok.startsWith('(') && cleanTok.endsWith(')')) {
-          cleanTok = cleanTok.slice(1, -1);
-          isWrapped = true;
-        }
-        if (cleanTok.includes('-')) {
-          const parts = cleanTok.split('-');
-          const processedParts = parts.map(part => {
-            if (CHORD_REGEX.test(part)) {
-              return `<span class="chord">${escapeHtml(transposeChord(part, currentTranspose))}</span>`;
-            }
-            return `<span class="lyric">${escapeHtml(part)}</span>`;
-          });
-          return (isWrapped ? '<span class="lyric">(</span>' : '') + processedParts.join('-') + (isWrapped ? '<span class="lyric">)</span>' : '');
-        }
-        if (cleanTok && CHORD_REGEX.test(cleanTok)) {
-           return (isWrapped ? '<span class="lyric">(</span>' : '') + 
-                  `<span class="chord">${escapeHtml(transposeChord(cleanTok, currentTranspose))}</span>` + 
-                  (isWrapped ? '<span class="lyric">)</span>' : '');
-        }
-        return `<span class="lyric">${escapeHtml(tok)}</span>`;
+        if (/^\s+$/.test(tok)) return tok;
+        return processToken(tok);
       }).join('');
       return `<div class="line-row">${parsedLine}</div>`;
     }).join('');
@@ -302,36 +275,27 @@
   document.getElementById('font-up').addEventListener('click', () => { if (currentFontSize < 30) { currentFontSize += 1; updateDisplay(); } });
   document.getElementById('font-down').addEventListener('click', () => { if (currentFontSize > 10) { currentFontSize -= 1; updateDisplay(); } });
 
-  // ===== LOGIKA TOMBOL SEMBUNYI =====
   const bottomActions = document.getElementById('bottom-actions');
   const toggleActionsBtn = document.getElementById('toggle-actions');
-
   toggleActionsBtn.addEventListener('click', () => {
     bottomActions.classList.toggle('hidden');
-    if (bottomActions.classList.contains('hidden')) {
-      toggleActionsBtn.textContent = '▲ Tampilkan';
-    } else {
-      toggleActionsBtn.textContent = '▼ Sembunyikan';
-    }
+    if (bottomActions.classList.contains('hidden')) toggleActionsBtn.textContent = '▲ Tampilkan';
+    else toggleActionsBtn.textContent = '▼ Sembunyikan';
   });
 
-  // SIDEBAR
   const sidebar = document.getElementById('sidebar'), toggleBtn = document.getElementById('toggle-sidebar');
   toggleBtn.addEventListener('click', () => {
     sidebar.classList.toggle('hidden'); toggleBtn.classList.toggle('hidden');
     toggleBtn.textContent = sidebar.classList.contains('hidden') ? '◀' : '▶';
   });
 
-  // AUTOSCROLL
   const eqBars = document.querySelectorAll('.eq-bar');
   const stopBtn = document.getElementById('eq-stop');
-
   function stopScrolling() {
     if (scrollInterval) clearInterval(scrollInterval);
     scrollInterval = null; currentSpeed = 0;
     eqBars.forEach(bar => bar.classList.remove('active'));
   }
-
   function startScrolling(speed) {
     if (scrollInterval) clearInterval(scrollInterval);
     currentSpeed = speed;
@@ -346,7 +310,6 @@
       if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 10) stopScrolling();
     }, intervalMs);
   }
-
   eqBars.forEach(bar => {
     bar.addEventListener('click', () => {
       const speed = parseInt(bar.dataset.speed);
